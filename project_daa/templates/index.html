@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HashSearch — A Mini Search Engine powered by Hash Table–based Inverted Index. College project demonstrating O(1) search using custom hash tables with collision visualization." />
+  <title>HashSearch — Mini Search Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ HEADER -->
+<header class="header" id="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">HashSearch</span>
+      <span class="logo-badge">DSA Project</span>
+    </div>
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-btn active" id="tab-upload" onclick="switchTab('upload')" aria-selected="true">
+        <span class="nav-icon">📤</span> Upload
+      </button>
+      <button class="nav-btn" id="tab-search" onclick="switchTab('search')" aria-selected="false">
+        <span class="nav-icon">🔍</span> Search
+      </button>
+      <button class="nav-btn" id="tab-stats" onclick="switchTab('stats')" aria-selected="false">
+        <span class="nav-icon">📊</span> Stats
+      </button>
+      <button class="nav-btn" id="tab-visualize" onclick="switchTab('visualize')" aria-selected="false">
+        <span class="nav-icon">🗂️</span> Visualize
+      </button>
+      <button class="nav-btn" id="tab-history" onclick="switchTab('history')" aria-selected="false">
+        <span class="nav-icon">🕑</span> History
+      </button>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ HERO -->
+<section class="hero" id="hero-section">
+  <div class="hero-bg-grid"></div>
+  <div class="hero-content">
+    <div class="hero-chip">Hash Table · Inverted Index · O(1) Search</div>
+    <h1 class="hero-title">Mini Search Engine</h1>
+    <p class="hero-sub">Add documents → Index with Hash Table → Search in constant time</p>
+    <div class="hero-flow">
+      <div class="flow-step">
+        <div class="flow-icon">📄</div>
+        <div class="flow-label">Add Documents</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">#️⃣</div>
+        <div class="flow-label">Hash &amp; Index</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">⚡</div>
+        <div class="flow-label">O(1) Search</div>
+      </div>
+    </div>
+    <button class="btn-primary hero-cta" id="btn-load-samples" onclick="loadSamples()">
+      🚀 Load Sample Dataset
+    </button>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN CONTENT -->
+<main class="main" id="main-content">
+
+  <!-- ──────────────────────────────────── TAB: UPLOAD -->
+  <section class="tab-panel active" id="panel-upload" aria-labelledby="tab-upload">
+    <div class="section-header">
+      <h2 class="section-title">📤 Index Documents</h2>
+      <p class="section-sub">Add text documents to build the Hash Table–powered inverted index</p>
+    </div>
+
+    <div class="upload-grid">
+      <!-- Manual Input -->
+      <div class="card" id="card-manual-input">
+        <div class="card-header">
+          <h3 class="card-title">✏️ Paste Document</h3>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="doc-name">Document Name</label>
+          <input type="text" id="doc-name" class="form-input" placeholder="e.g. Article #1" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="doc-content">Document Content</label>
+          <textarea id="doc-content" class="form-textarea" placeholder="Paste your text here…" rows="6"></textarea>
+        </div>
+        <div class="quick-samples">
+          <span class="quick-label">Quick fill:</span>
+          <button class="chip-btn" id="btn-sample-science" onclick="fillSample('science')">Science</button>
+          <button class="chip-btn" id="btn-sample-technology" onclick="fillSample('technology')">Technology</button>
+          <button class="chip-btn" id="btn-sample-history" onclick="fillSample('history')">History</button>
+        </div>
+        <button class="btn-primary" id="btn-index-doc" onclick="indexDocument()">
+          Index Document →
+        </button>
+        <div id="index-feedback" class="feedback-msg hidden"></div>
+      </div>
+
+      <!-- File Upload -->
+      <div class="card" id="card-file-upload">
+        <div class="card-header">
+          <h3 class="card-title">📁 Upload .txt File</h3>
+        </div>
+        <div class="dropzone" id="dropzone"
+             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleDrop(event)">
+          <div class="dropzone-icon">📂</div>
+          <div class="dropzone-text">Drag &amp; drop a .txt file here</div>
+          <div class="dropzone-sub">or</div>
+          <input type="file" id="file-input" accept=".txt" style="display:none" onchange="uploadFile(this)" />
+          <button class="btn-ghost" id="btn-browse" onclick="document.getElementById('file-input').click()">Browse File</button>
+        </div>
+        <button class="btn-primary" id="btn-upload-file" onclick="document.getElementById('file-input').click()">
+          Upload File →
+        </button>
+        <div id="upload-feedback" class="feedback-msg hidden"></div>
+      </div>
+    </div>
+
+    <!-- Indexed Documents List -->
+    <div class="card mt-24" id="card-docs-list">
+      <div class="card-header">
+        <h3 class="card-title">📚 Indexed Documents</h3>
+        <span class="badge" id="doc-count-badge">0 docs</span>
+      </div>
+      <div id="docs-list" class="docs-list">
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">No documents uploaded yet.</div>
+          <div class="empty-sub">Add documents above or load the sample dataset.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────── TAB: SEARCH -->
+  <section class="tab-panel" id="panel-search" aria-labelledby="tab-search">
+    <div class="section-header">
+      <h2 class="section-title">🔍 Search Documents</h2>
+      <p class="section-sub">Hash table lookup returns results in O(1) average time — try multiple keywords</p>
+    </div>
+
+    <div class="card search-card" id="card-search">
+      <div class="search-bar-wrap">
+        <span class="search-icon-left">🔍</span>
+        <input type="text" id="search-input" class="search-input"
+               placeholder="Search across all indexed documents…"
+               onkeyup="if(event.key==='Enter') doSearch()"
+               autocomplete="off" />
+        <button class="btn-primary search-btn" id="btn-search" onclick="doSearch()">Search</button>
+      </div>
+      <div class="search-suggestions" id="search-suggestions">
+        <span class="suggestion-label">Try:</span>
+        <button class="chip-btn" onclick="setQuery('hash table')">hash table</button>
+        <button class="chip-btn" onclick="setQuery('machine learning')">machine learning</button>
+        <button class="chip-btn" onclick="setQuery('data retrieval')">data retrieval</button>
+        <button class="chip-btn" onclick="setQuery('collision')">collision</button>
+        <button class="chip-btn" onclick="setQuery('students')">students</button>
+        <button class="chip-btn" onclick="setQuery('python')">python</button>
+      </div>
+    </div>
+
+    <!-- Search Meta -->
+    <div id="search-meta" class="search-meta hidden">
+      <div class="meta-pill" id="meta-time"></div>
+      <div class="meta-pill" id="meta-tokens"></div>
+      <div class="meta-pill" id="meta-count"></div>
+    </div>
+
+    <!-- Results -->
+    <div id="search-results" class="results-grid"></div>
+  </section>
+
+  <!-- ──────────────────────────────────── TAB: STATS -->
+  <section class="tab-panel" id="panel-stats" aria-labelledby="tab-stats">
+    <div class="section-header">
+      <h2 class="section-title">📊 Hash Table Statistics</h2>
+      <p class="section-sub">Live metrics from the custom hash table implementation</p>
+    </div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="loading-state">Load documents first to see stats</div>
+    </div>
+
+    <!-- Collision Log -->
+    <div class="card mt-24" id="card-collisions">
+      <div class="card-header">
+        <h3 class="card-title">💥 Collision Log (Separate Chaining)</h3>
+        <span class="badge" id="collision-badge">0</span>
+      </div>
+      <div id="collision-log" class="collision-log">
+        <div class="empty-state">No collisions yet — add more documents to trigger them.</div>
+      </div>
+    </div>
+
+    <!-- Speed Compare -->
+    <div class="card mt-24" id="card-speed-compare">
+      <div class="card-header">
+        <h3 class="card-title">⚡ Search Speed Comparison</h3>
+      </div>
+      <div class="speed-compare" id="speed-compare">
+        <div class="speed-row">
+          <span class="speed-label">🔴 Linear Search (O(n))</span>
+          <div class="speed-bar-wrap"><div class="speed-bar linear" id="bar-linear" style="width:0%"></div></div>
+          <span class="speed-val" id="val-linear">—</span>
+        </div>
+        <div class="speed-row">
+          <span class="speed-label">🟢 Hash Table Search (O(1))</span>
+          <div class="speed-bar-wrap"><div class="speed-bar hash" id="bar-hash" style="width:0%"></div></div>
+          <span class="speed-val" id="val-hash">—</span>
+        </div>
+        <p class="speed-note" id="speed-note">Run a search first to see comparison.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────── TAB: VISUALIZE -->
+  <section class="tab-panel" id="panel-visualize" aria-labelledby="tab-visualize">
+    <div class="section-header">
+      <h2 class="section-title">🗂️ Hash Table Visualization</h2>
+      <p class="section-sub">See how words are stored in buckets — chains show collision resolution</p>
+    </div>
+    <div class="card" id="card-visualize">
+      <div class="viz-controls">
+        <label class="form-label" for="viz-limit">Show buckets (1–64):</label>
+        <input type="range" id="viz-limit" min="10" max="64" value="32" oninput="onVizSlider(this)" />
+        <span id="viz-limit-val">32</span>
+        <button class="btn-ghost ml-16" id="btn-refresh-viz" onclick="loadVisualize()">↺ Refresh</button>
+      </div>
+      <div id="bucket-viz" class="bucket-viz">
+        <div class="empty-state">Add documents to see the hash table buckets.</div>
+      </div>
+      <div class="viz-legend">
+        <div class="legend-item"><div class="legend-dot empty"></div> Empty bucket</div>
+        <div class="legend-item"><div class="legend-dot single"></div> 1 item</div>
+        <div class="legend-item"><div class="legend-dot chain"></div> Collision chain</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────── TAB: HISTORY -->
+  <section class="tab-panel" id="panel-history" aria-labelledby="tab-history">
+    <div class="section-header">
+      <h2 class="section-title">🕑 Search History</h2>
+      <p class="section-sub">Stored in a separate hash table — keyed by query string</p>
+    </div>
+    <div class="card" id="card-history">
+      <div id="history-list" class="history-list">
+        <div class="empty-state">No searches yet — go to the Search tab and run a query!</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════ TOAST -->
+<div id="toast" class="toast hidden" role="alert" aria-live="polite"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════ FOOTER -->
+<footer class="footer" id="footer">
+  <p>⚡ HashSearch &nbsp;·&nbsp; Hash Table–Powered Inverted Index &nbsp;·&nbsp; College DSA Project</p>
+  <p class="footer-sub">Custom Hash Table · Separate Chaining · O(1) Average Lookup</p>
+</footer>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
